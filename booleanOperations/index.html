@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>0xalihaider // Logic Sandbox</title>
+    <!-- Anton for headers, Space Mono for technical details -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <style>
+      :root {
+        --cobalt: #0044ff;
+        --cyber-yellow: #ffde59;
+        --hot-pink: #ff007a;
+        --void-black: #0f0f13;
+        --manga-paper: #f4f4f0;
+        --surface: #ffffff;
+        --line-muted: #d1d5db;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--void-black);
+        font-family: "Space Mono", monospace;
+        background-color: var(--manga-paper); /* Calmer background */
+      }
+
+      .app-wrapper {
+        width: 100%;
+        min-height: 100vh;
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Main Container - Keeps the core brand identity without being messy */
+      .sandbox-card {
+        width: 100%;
+        max-width: 860px;
+        background: var(--surface);
+        border: 3px solid var(--void-black);
+        border-bottom: 8px solid var(--void-black);
+        border-right: 8px solid var(--void-black);
+      }
+
+      .pad {
+        padding: 32px clamp(20px, 5vw, 40px);
+      }
+
+      .divider {
+        border-top: 2px solid var(--void-black);
+      }
+
+      /* Typography */
+      h1,
+      h2,
+      .eyebrow {
+        font-family: "Anton", Impact, sans-serif;
+        text-transform: uppercase;
+        color: var(--void-black);
+        letter-spacing: 1px;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 32px;
+      }
+      .eyebrow {
+        font-size: 14px;
+        margin-bottom: 16px;
+        color: var(--cobalt);
+      }
+      .mono {
+        font-family: "Space Mono", monospace;
+      }
+
+      /* WCAG AA Focus Indicator */
+      *:focus-visible {
+        outline: 3px solid var(--cobalt) !important;
+        outline-offset: 3px !important;
+      }
+
+      /* Gate Buttons - Cleaned up */
+      .gate-section {
+        background: var(--surface);
+      }
+
+      .gate-button {
+        min-height: 48px;
+        background: var(--surface);
+        color: var(--void-black);
+        font-family: "Space Mono", monospace;
+        font-size: 14px;
+        font-weight: 700;
+        border: 2px solid var(--void-black);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        text-transform: uppercase;
+      }
+
+      .gate-button:hover {
+        background: var(--manga-paper);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 var(--void-black);
+      }
+
+      .gate-button.selected {
+        background: var(--cobalt) !important;
+        color: var(--surface) !important;
+        border-color: var(--void-black) !important;
+        transform: translateY(0);
+        box-shadow: none;
+      }
+
+      /* Input Switches - Simplified */
+      .input-toggle {
+        width: 100%;
+        padding: 16px 20px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--surface);
+        color: var(--void-black);
+        border: 2px solid var(--void-black);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .input-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 var(--void-black);
+      }
+
+      .input-toggle.is-on {
+        background: var(--cyber-yellow);
+      }
+
+      .switch-track {
+        width: 44px;
+        height: 24px;
+        padding: 2px;
+        background: var(--surface);
+        border: 2px solid var(--void-black);
+        flex-shrink: 0;
+        transition: background 0.2s;
+        border-radius: 20px;
+      }
+
+      .switch-thumb {
+        display: block;
+        height: 16px;
+        width: 16px;
+        background: var(--void-black);
+        border-radius: 50%;
+        transition: transform 0.2s;
+      }
+
+      .is-on .switch-track {
+        background: var(--void-black);
+      }
+
+      .is-on .switch-thumb {
+        transform: translateX(20px);
+        background: var(--cyber-yellow);
+      }
+
+      /* Live Circuit Diagram - Clean white background */
+      .diagram {
+        background: var(--surface);
+        border: 2px solid var(--void-black);
+        padding: 24px;
+      }
+
+      .diagram svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: 190px;
+      }
+
+      .wire {
+        fill: none;
+        stroke: var(--line-muted);
+        stroke-width: 4;
+        stroke-linecap: square;
+        transition: stroke 0.2s;
+      }
+
+      .wire.live {
+        stroke: var(--cobalt);
+      }
+
+      .circuit-dot {
+        fill: var(--line-muted);
+        transition: fill 0.2s;
+      }
+
+      .circuit-dot.live {
+        fill: var(--cobalt);
+      }
+
+      .gate-shape {
+        fill: var(--surface);
+        stroke: var(--void-black);
+        stroke-width: 3;
+      }
+
+      .diagram-text,
+      .diagram-small {
+        fill: var(--void-black);
+        font-family: "Space Mono", monospace;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .diagram-text.live,
+      #diagram-gate.live {
+        fill: var(--cobalt);
+      }
+
+      /* Output Node */
+      .output-node {
+        height: 80px;
+        width: 80px;
+        flex-shrink: 0;
+        background: var(--surface);
+        color: var(--void-black);
+        border: 2px solid var(--void-black);
+        display: grid;
+        place-items: center;
+        transition: all 0.2s;
+      }
+
+      .output-node.is-on {
+        background: var(--cobalt);
+        color: var(--surface);
+      }
+
+      /* Truth Table */
+      .truth-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+        font-family: "Space Mono", monospace;
+        font-size: 14px;
+        border: 2px solid var(--void-black);
+      }
+
+      .truth-table th,
+      .truth-table td {
+        padding: 10px;
+        border: 1px solid var(--void-black);
+      }
+
+      .truth-table th {
+        background: var(--manga-paper);
+        font-family: "Anton", sans-serif;
+        font-size: 16px;
+        letter-spacing: 1px;
+      }
+
+      .truth-table tr.current td {
+        background: var(--cyber-yellow);
+        font-weight: 700;
+      }
+
+      footer p {
+        color: var(--void-black);
+      }
+
+      @media (max-width: 900px) {
+        .gate-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 600px) {
+        .app-wrapper {
+          padding: 16px 12px 22px;
+        }
+        .lower-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-wrapper">
+      <article class="sandbox-card" aria-labelledby="page-title">
+        <header class="pad">
+          <p class="eyebrow">INTERACTIVE / 001</p>
+          <h1 id="page-title">Logic Sandbox</h1>
+          <p class="mono mt-2 font-bold uppercase text-sm">
+            Choose a gate. Flip the inputs. See what happens.
+          </p>
+        </header>
+
+        <section
+          class="pad divider gate-section"
+          aria-labelledby="gate-heading"
+        >
+          <h2 id="gate-heading" class="eyebrow mb-4">01 / SELECT A GATE</h2>
+          <div
+            class="gate-grid grid grid-cols-6 gap-3"
+            role="group"
+            aria-label="Logic gate"
+          >
+            <button
+              type="button"
+              data-gate="AND"
+              class="gate-button selected"
+              aria-pressed="true"
+            >
+              AND
+            </button>
+            <button
+              type="button"
+              data-gate="OR"
+              class="gate-button"
+              aria-pressed="false"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              data-gate="XOR"
+              class="gate-button"
+              aria-pressed="false"
+            >
+              XOR
+            </button>
+            <button
+              type="button"
+              data-gate="NAND"
+              class="gate-button"
+              aria-pressed="false"
+            >
+              NAND
+            </button>
+            <button
+              type="button"
+              data-gate="NOR"
+              class="gate-button"
+              aria-pressed="false"
+            >
+              NOR
+            </button>
+            <button
+              type="button"
+              data-gate="NOT"
+              class="gate-button"
+              aria-pressed="false"
+            >
+              NOT
+            </button>
+          </div>
+        </section>
+
+        <section class="pad divider" aria-labelledby="input-heading">
+          <h2 id="input-heading" class="eyebrow mb-4">02 / SET YOUR INPUTS</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              id="input-a"
+              type="button"
+              class="input-toggle"
+              aria-pressed="false"
+              aria-label="Input A, 0. Toggle input"
+            >
+              <span class="flex flex-col">
+                <span class="font-bold uppercase text-xs">INPUT A</span>
+                <span
+                  id="value-a"
+                  class="mono font-bold text-2xl"
+                  aria-hidden="true"
+                  >0</span
+                >
+              </span>
+              <span class="switch-track" aria-hidden="true"
+                ><span class="switch-thumb"></span
+              ></span>
+            </button>
+
+            <button
+              id="input-b"
+              type="button"
+              class="input-toggle"
+              aria-pressed="false"
+              aria-label="Input B, 0. Toggle input"
+            >
+              <span class="flex flex-col">
+                <span class="font-bold uppercase text-xs">INPUT B</span>
+                <span
+                  id="value-b"
+                  class="mono font-bold text-2xl"
+                  aria-hidden="true"
+                  >0</span
+                >
+              </span>
+              <span class="switch-track" aria-hidden="true"
+                ><span class="switch-thumb"></span
+              ></span>
+            </button>
+          </div>
+        </section>
+
+        <section class="pad divider" aria-labelledby="circuit-heading">
+          <h2 id="circuit-heading" class="eyebrow mb-4">03 / LIVE CIRCUIT</h2>
+          <div
+            class="diagram"
+            role="img"
+            aria-label="Circuit schematic; signal states update with the inputs and output"
+          >
+            <svg viewBox="0 0 600 180" aria-hidden="true">
+              <path id="wire-a" class="wire" d="M72 50 H239 V78 H265"></path>
+              <path id="wire-b" class="wire" d="M72 130 H239 V102 H265"></path>
+              <path id="wire-out" class="wire" d="M385 90 H532"></path>
+              <circle
+                id="dot-a"
+                class="circuit-dot"
+                cx="72"
+                cy="50"
+                r="9"
+              ></circle>
+              <circle
+                id="dot-b"
+                class="circuit-dot"
+                cx="72"
+                cy="130"
+                r="9"
+              ></circle>
+              <rect
+                class="gate-shape"
+                x="265"
+                y="55"
+                width="120"
+                height="70"
+                rx="0"
+              ></rect>
+              <circle
+                id="dot-out"
+                class="circuit-dot"
+                cx="532"
+                cy="90"
+                r="11"
+              ></circle>
+              <text class="diagram-small" x="44" y="28">A</text>
+              <text id="diagram-a" class="diagram-text" x="44" y="78">0</text>
+              <g id="diagram-b-group">
+                <text class="diagram-small" x="44" y="109">B</text>
+                <text id="diagram-b" class="diagram-text" x="44" y="158">
+                  0
+                </text>
+              </g>
+              <text
+                id="diagram-gate"
+                class="diagram-text"
+                x="325"
+                y="98"
+                text-anchor="middle"
+              >
+                AND
+              </text>
+              <text id="diagram-output" class="diagram-text" x="550" y="96">
+                0
+              </text>
+            </svg>
+          </div>
+        </section>
+
+        <div class="pad divider lower-grid grid grid-cols-2 gap-8">
+          <section aria-labelledby="output-heading">
+            <h2 id="output-heading" class="eyebrow mb-3">04 / OUTPUT</h2>
+            <div class="flex items-center justify-between gap-4">
+              <p class="mono font-bold text-sm">The result, in real time.</p>
+              <div
+                id="output-node"
+                class="output-node"
+                role="status"
+                aria-live="polite"
+                aria-label="Output 0"
+              >
+                <span
+                  id="output-value"
+                  class="mono font-bold text-3xl"
+                  aria-hidden="true"
+                  >0</span
+                >
+              </div>
+            </div>
+          </section>
+
+          <section aria-labelledby="truth-heading">
+            <h2 id="truth-heading" class="eyebrow mb-3">05 / TRUTH TABLE</h2>
+            <table
+              class="truth-table"
+              aria-label="Truth table for selected logic gate"
+            >
+              <thead>
+                <tr>
+                  <th scope="col">A</th>
+                  <th id="truth-b-heading" scope="col">B</th>
+                  <th scope="col">OUT</th>
+                </tr>
+              </thead>
+              <tbody id="truth-body"></tbody>
+            </table>
+          </section>
+        </div>
+      </article>
+
+      <footer class="pt-6 text-center">
+        <p class="eyebrow">0XALIHAIDER // S-TIER DEVELOPER LOGIC MODELS</p>
+      </footer>
+    </main>
+
+    <script>
+      (() => {
+        const state = { gate: "AND", a: 0, b: 0 };
+        const gates = document.querySelectorAll("[data-gate]");
+        const inputs = {
+          a: document.getElementById("input-a"),
+          b: document.getElementById("input-b"),
+        };
+        const outputNode = document.getElementById("output-node");
+        const truthBody = document.getElementById("truth-body");
+
+        function calculate(gate, a, b) {
+          switch (gate) {
+            case "AND":
+              return a & b;
+            case "OR":
+              return a | b;
+            case "XOR":
+              return a ^ b;
+            case "NAND":
+              return 1 - (a & b);
+            case "NOR":
+              return 1 - (a | b);
+            case "NOT":
+              return 1 - a;
+            default:
+              return 0;
+          }
+        }
+
+        function renderTruthTable() {
+          const rows =
+            state.gate === "NOT"
+              ? [
+                  [0, 0],
+                  [1, 0],
+                ]
+              : [
+                  [0, 0],
+                  [0, 1],
+                  [1, 0],
+                  [1, 1],
+                ];
+          const existing = [...truthBody.rows];
+          rows.forEach(([a, b], index) => {
+            const row = existing[index] || truthBody.insertRow();
+            if (!row.cells.length) for (let i = 0; i < 3; i++) row.insertCell();
+            row.cells[0].textContent = a;
+            row.cells[1].textContent = b;
+            row.cells[1].hidden = state.gate === "NOT";
+            row.cells[2].textContent = calculate(state.gate, a, b);
+            row.classList.toggle(
+              "current",
+              a === state.a && (state.gate === "NOT" || b === state.b),
+            );
+          });
+          while (truthBody.rows.length > rows.length) truthBody.deleteRow(-1);
+          document.getElementById("truth-b-heading").hidden =
+            state.gate === "NOT";
+        }
+
+        function render() {
+          gates.forEach((button) => {
+            const selected = button.dataset.gate === state.gate;
+            button.classList.toggle("selected", selected);
+            button.setAttribute("aria-pressed", String(selected));
+          });
+
+          Object.entries(inputs).forEach(([key, button]) => {
+            const on = Boolean(state[key]);
+            button.classList.toggle("is-on", on);
+            button.setAttribute("aria-pressed", String(on));
+            button.setAttribute(
+              "aria-label",
+              `Input ${key.toUpperCase()}, ${state[key]}. Toggle input`,
+            );
+            document.getElementById(`value-${key}`).textContent = state[key];
+            document.getElementById(`diagram-${key}`).textContent = state[key];
+            document.getElementById(`wire-${key}`).classList.toggle("live", on);
+            document.getElementById(`dot-${key}`).classList.toggle("live", on);
+          });
+
+          const isNot = state.gate === "NOT";
+          inputs.b.hidden = isNot;
+          document.getElementById("diagram-b-group").hidden = isNot;
+          document.getElementById("wire-b").style.visibility = isNot
+            ? "hidden"
+            : "visible";
+          document.getElementById("dot-b").style.visibility = isNot
+            ? "hidden"
+            : "visible";
+
+          const result = calculate(state.gate, state.a, state.b);
+          document.getElementById("output-value").textContent = result;
+          document.getElementById("diagram-output").textContent = result;
+
+          const diagramGate = document.getElementById("diagram-gate");
+          diagramGate.textContent = state.gate;
+          diagramGate.classList.toggle("live", Boolean(result));
+
+          outputNode.classList.toggle("is-on", Boolean(result));
+          outputNode.setAttribute("aria-label", `Output ${result}`);
+          document
+            .getElementById("wire-out")
+            .classList.toggle("live", Boolean(result));
+          document
+            .getElementById("dot-out")
+            .classList.toggle("live", Boolean(result));
+
+          renderTruthTable();
+        }
+
+        gates.forEach((button) =>
+          button.addEventListener("click", () => {
+            state.gate = button.dataset.gate;
+            render();
+          }),
+        );
+
+        Object.entries(inputs).forEach(([key, button]) =>
+          button.addEventListener("click", () => {
+            state[key] ^= 1;
+            render();
+          }),
+        );
+
+        render();
+      })();
+    </script>
+  </body>
+</html>
